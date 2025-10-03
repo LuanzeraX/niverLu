@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Surpresa para você ❤️</title>
+<style>
+  /* Reset básico */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Orbitron', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #d7e8f7 0%, #f0f4f8 100%);
+    color: #4a6fa5;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  /* Contador visível no topo */
+  #countdown-container {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    color: #4a6fa5;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(74, 111, 165, 0.5);
+    z-index: 10000;
+    user-select: none;
+  }
+
+  /* Canvas para fogos */
+  #fireworks-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Container geral */
+  #app, #login-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 25px;
+    box-shadow:
+      0 0 15px rgba(74, 111, 165, 0.4),
+      0 0 30px rgba(74, 111, 165, 0.3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #login-container {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 0 15px rgba(74, 111, 165, 0.3),
+      0 0 30px rgba(74, 111, 165, 0.2) inset;
+    display: none; /* Inicialmente escondido */
+  }
+
+  h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #4a6fa5;
+    text-shadow:
+      0 0 3px rgba(74, 111, 165, 0.7);
+  }
+
+  input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 15px;
+    border: 1.5px solid #a3b8d1;
+    font-size: 1.15rem;
+    font-weight: 600;
+    outline: none;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    color: #4a6fa5;
+    background: #f9fbfd;
+  }
+  input:focus {
+    box-shadow:
+      0 0 10px rgba(74, 111, 165, 0.5);
+    border-color: #4a6fa5;
+  }
+
+  button {
+    margin-top: 25px;
+    width: 100%;
+    padding: 14px 0;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(90deg, #7a9edc, #a3b8d1);
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+      0 0 15px #7a9edc;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  button:hover,
+  button:focus {
+    background: linear-gradient(90deg, #a3b8d1, #7a9edc);
+    transform: scale(1.05);
+    outline: none;
+  }
+
+  #erro {
+    color: #d9534f;
+    margin-top: 18px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: none;
+    user-select: none;
+    text-shadow: 0 0 3px #d9534f;
+  }
+
+  /* Banner de parabéns */
+  #banner {
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(90deg, #7a9edc, #a3b8d1);
+    border-radius: 25px;
+    padding: 30px 35px;
+    font-size: 1.9rem;
+    font-weight: 900;
+    text-align: center;
+    box-shadow:
+      0 0 15px rgba(122, 158, 220, 0.6);
+    letter-spacing: 2px;
+    user-select: none;
+    margin-bottom: 25px;
+    color: #fff;
+  }
+
+  /* Texto especial */
+  #mensagem-parabens {
+    background: rgba(122, 158, 220, 0.15);
+    border-radius: 20px;
+    padding: 22px 28px;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    box-shadow:
+      0 0 15px rgba(122, 158, 220, 0.4);
+    margin-bottom: 35px;
+    color: #3a4f7a;
+    font-style: italic;
+    user-select: text;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* Conteúdo secreto */
+  #conteudo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 10px 40px 10px;
+    width: 100%;
+    position: relative;
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #4a6fa5;
+    text-shadow:
+      0 0 5px rgba(74, 111, 165, 0.7);
+    word-break: keep-all;
+  }
+
+  p {
+    font-size: 1.2rem;
+    max-width: 100%;
+    margin-bottom: 30px;
+    line-height: 1.5;
+    color: #3a4f7a;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  button#mais-amor {
+    background: linear-gradient(90deg, #a3b8d1, #7a9edc);
+    box-shadow:
+      0 0 20px #7a9edc,
+      0 0 40px #a3b8d1;
+    color: #fff;
+  }
+
+  /* Corações caindo */
+  .heart {
+    position: fixed;
+    top: -50px;
+    width: 30px;
+    height: 30px;
+    background-color: #ff4b8b;
+    clip-path: polygon(
+      50% 0%,
+      61% 10%,
+      70% 20%,
+      80% 35%,
+      80% 50%,
+      80% 65%,
+      70% 80%,
+      60% 90%,
+      50% 100%,
+      40% 90%,
+      30% 80%,
+      20% 65%,
+      20% 50%,
+      20% 35%,
+      30% 20%,
+      39% 10%
+    );
+    opacity: 0.8;
+    animation-name: fall, sway;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: infinite, infinite;
+    z-index: 9999;
+    animation-duration: 2s, 4s;
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(110vh);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sway {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(20px);
+    }
+  }
+
+  /* Responsividade */
+  @media (max-width: 360px) {
+    #banner {
+      font-size: 1.6rem;
+      padding: 25px 20px;
+      letter-spacing: 1.5px;
+    }
+    #mensagem-parabens {
+      font-size: 1rem;
+      padding: 18px 20px;
+    }
+    #login-container {
+      padding: 25px 20px;
+    }
+    h2 {
+      font-size: 1.5rem;
+    }
+    input {
+      font-size: 1rem;
+      padding: 12px 15px;
+    }
+    button {
+      font-size: 1.1rem;
+      padding: 12px 0;
+    }
+    #conteudo h1 {
+      font-size: 1.5rem;
+    }
+    #conteudo p {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fireworks-canvas"></canvas>
+
+<div id="countdown-container">Acesso liberado em: --:--:--</div>
+
+<div id="login-container" role="form" aria-labelledby="login-title">
+  <h2 id="login-title">Digite a senha para acessar 💖</h2>
+  <input type="password" id="senha" placeholder="Digite a senha" autocomplete="off" />
+  <button onclick="verificarSenha()">Entrar</button>
+  <p id="erro" style="display:none; color:#d9534f; margin-top:10px;">Senha incorreta! Tente novamente.</p>
+</div>
+
+<div id="app" style="display:none;">
+  <div id="banner">Parabéns, meu amor! 🎉</div>
+  <div id="mensagem-parabens">
+    Que seu aniversário seja repleto de alegria, amor e momentos inesquecíveis.<br>
+    Você é a luz de minha vida e meu maior presente.<br>
+    Queria muito estar com você nesse momento.<br>
+    Te amo muito! ❤️
+  </div>
+  <div id="conteudo">
+    <h1>❤️ Para Você, Meu Amor ❤️</h1>
+    <p id="mensagem">Você é a melhor parte da minha vida. Obrigado por estar sempre ao meu lado.</p>
+    <button id="mais-amor" onclick="mostrarFrase()">Clique para mais amor</button>
+  </div>
+</div>
+
+<script>
+  const countdownContainer = document.getElementById('countdown-container');
+  const loginContainer = document.getElementById('login-container');
+  const app = document.getElementById('app');
+
+  function updateCountdown() {
+    const now = new Date();
+    const target = new Date(2025, 9, 9, 23, 59, 0); // 09/10/2025 23:59:00 (month 9 = October)
+    let diff = Math.floor((target - now) / 1000);
+    if (diff <= 0) {
+      countdownContainer.style.display = 'none';
+      loginContainer.style.display = 'flex';
+      clearInterval(countdownInterval);
+      return;
+    }
+    const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+    const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+    const s = (diff % 60).toString().padStart(2, '0');
+    countdownContainer.textContent = `Acesso liberado em: ${h}:${m}:${s}`;
+  }
+
+  const countdownInterval = setInterval(updateCountdown, 1000);
+  updateCountdown();
+
+  // Funções do app
+  const senhaCorreta = "teamo123";
+
+  function verificarSenha() {
+    const senha = document.getElementById("senha").value.trim();
+    const erro = document.getElementById("erro");
+    if (senha === senhaCorreta) {
+      erro.style.display = 'none';
+      const login = document.getElementById("login-container");
+      const app = document.getElementById("app");
+      login.style.animation = "fadeOut 0.5s forwards";
+      setTimeout(() => {
+        login.style.display = "none";
+        app.style.display = "flex";
+        app.style.animation = "fadeIn 1s forwards";
+        startHearts();
+      }, 500);
+    } else {
+      erro.style.display = 'block';
+      setTimeout(() => {
+        erro.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  function mostrarFrase() {
+    const frases = [
+      "Te amo mais do que palavras podem explicar.",
+      "Você é meu sorriso todos os dias.",
+      "Eu sou muito sortudo por ter você.",
+      "Sempre quero estar ao seu lado.",
+      "Você é a luz da minha vida.",
+      "Queria muito estar com você nesse momento.",
+      "Cada momento contigo é um sonho realizado.",
+      "Meu coração é seu para sempre.",
+      "Você é minha inspiração diária.",
+      "Com você, a vida é mais colorida.",
+      "Amar você é minha maior alegria.",
+      "Você é minha paz e minha aventura.",
+      "Nosso amor é minha força.",
+      "Você é meu eterno sorriso.",
+      "Cada dia com você é um presente.",
+      "Meu amor por você não tem fim.",
+      "Você é a luz que ilumina meu caminho.",
+      "Com você, tudo é possível.",
+      "Você é meu porto seguro.",
+      "Amar você é a minha felicidade."
+    ];
+    const mensagem = document.getElementById("mensagem");
+    mensagem.textContent = frases[Math.floor(Math.random() * frases.length)];
+  }
+
+  // Corações caindo
+  function createHeart() {
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.animationDuration = (2 + Math.random() * 2) + 's';
+    heart.style.animationDelay = (Math.random() * 5) + 's';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 4000);
+  }
+
+  let heartInterval;
+  function startHearts() {
+    heartInterval = setInterval(createHeart, 200);
+  }
+  function stopHearts() {
+    clearInterval(heartInterval);
+  }
+
+  // Fogos de artifício
+  const canvas = document.getElementById('fireworks-canvas');
+  const ctx = canvas.getContext('2d');
+  let cw, ch;
+  let fireworks = [];
+  let particles = [];
+  let hue = 120;
+  let limiterTotal = 5;
+  let limiterTick = 0;
+  let timerTotal = 80;
+  let timerTick = 0;
+
+  function random(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function calculateDistance(p1x, p1y, p2x, p2y) {
+    const x = p1x - p2x;
+    const y = p1y - p2y;
+    return Math.sqrt(x * x + y * y);
+  }
+
+  class Firework {
+    constructor(sx, sy, tx, ty) {
+      this.x = sx;
+      this.y = sy;
+      this.sx = sx;
+      this.sy = sy;
+      this.tx = tx;
+      this.ty = ty;
+      this.distanceToTarget = calculateDistance(sx, sy, tx, ty);
+      this.distanceTravelled = 0;
+      this.coordinates = [];
+      this.coordinateCount = 3;
+      while (this.coordinateCount--) {
+        this.coordinates.push([this.x, this.y]);
+      }
+      this.angle = Math.atan2(ty - sy, tx - sx);
+      this.speed = 3;
+      this.acceleration = 1.05;
+      this.brightness = random(50, 70);
+      this.targetRadius = 1;
+    }
+    update(index) {
+      this.coordinates.pop();
+      this.coordinates.unshift([this.x, this.y]);
+      if (this.targetRadius < 8) {
+        this.targetRadius += 0.3;
+      } else {
+        this.targetRadius = 1;
+      }
+      this.speed *= this.acceleration;
+      const vx = Math.cos(this.angle) * this.speed;
+      const vy = Math.sin(this.angle) * this.speed;
+      this.distanceTravelled = calculateDistance(this.sx, this.sy, this.x + vx, this.y + vy);
+      if (this.distanceTravelled >= this.distanceToTarget) {
+        createParticles(this.tx, this.ty);
+        fireworks.splice(index, 1);
+      } else {
+        this.x += vx;
+        this.y += vy;
+      }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+      ctx.lineTo(this.x, this.y);
+      ctx.strokeStyle = `hsl(${hue}, 100%, ${this.brightness}%)`;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  class Particle {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.coordinates = [];
+      this.coordinateCount = 5;
+      while (this.coordinateCount--) {
+        this.coordinates.push([this.x, this.y]);
+      }
+      this.angle = random(0, Math.PI * 2);
+      this.speed = random(1, 10);
+      this.friction = 0.95;
+      this.gravity = 0.7;
+      this.hue = random(hue - 50, hue + 50);
+      this.brightness = random(50, 80);
+      this.alpha = 1;
+      this.decay = random(0.015, 0.03);
+    }
+    update(index) {
+      this.coordinates.pop();
+      this.coordinates.unshift([this.x, this.y]);
+      this.speed *= this.friction;
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed + this.gravity;
+      this.alpha -= this.decay;
+      if (this.alpha <= 0) {
+        particles.splice(index, 1);
+      }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+      ctx.lineTo(this.x, this.y);
+      ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+      ctx.stroke();
+    }
+  }
+
+  function createParticles(x, y) {
+    let particleCount = 30;
+    while (particleCount--) {
+      particles.push(new Particle(x, y));
+    }
+  }
+
+  function loop() {
+    requestAnimationFrame(loop);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(240, 244, 248, 0.2)';
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.globalCompositeOperation = 'lighter';
+    let i = fireworks.length;
+    while (i--) {
+      fireworks[i].draw();
+      fireworks[i].update(i);
+    }
+    let j = particles.length;
+    while (j--) {
+      particles[j].draw();
+      particles[j].update(j);
+    }
+    if (timerTick >= timerTotal) {
+      if (limiterTick >= limiterTotal) {
+        let startX = cw / 2;
+        let startY = ch;
+        let targetX = random(0, cw);
+        let targetY = random(0, ch / 2);
+        fireworks.push(new Firework(startX, startY, targetX, targetY));
+        limiterTick = 0;
+      } else {
+        limiterTick++;
+      }
+      timerTick = 0;
+    } else {
+      timerTick++;
+    }
+  }
+
+  function resizeCanvas() {
+    cw = window.innerWidth;
+    ch = window.innerHeight;
+    canvas.width = cw;
+    canvas.height = ch;
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  resizeCanvas();
+  loop();
+</script>
+
+</body>
+</html>
